@@ -61,8 +61,8 @@ python nanodo/main.py \
   --config.workdir=/tmp/nanodo_workdir \
   --config.vocab_path=tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model \
   --config.model.L=128 \
-  --config.batch_size=2 \
-  --config.pygrain_worker_count=0 \
+  --config.batch_size=8 \
+  --config.pygrain_worker_count=4 \
   2> stderr.log
 ```
 

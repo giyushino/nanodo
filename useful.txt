@@ -1,3 +1,11 @@
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform 
 pip install -U "jax[cuda12]"
 
+
+python nanodo/main.py \
+  --config=nanodo/configs/default.py \
+  --config.workdir=/tmp/nanodo_workdir \
+  --config.vocab_path=tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model \
+  --config.model.L=128 \
+  --config.pygrain_worker_count=0 \
+  2> stderr.log

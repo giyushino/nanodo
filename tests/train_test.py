@@ -64,7 +64,7 @@ def _get_config(self: parameterized.TestCase) -> "ml_collections.ConfigDict":
   c.opt.eps = 1e-9
   c.opt.weight_decay = 0.1
 
-  c.batch_size = 2
+  c.batch_size = 8 # used to be 2
   c.eval_steps = 1
   c.checkpoint_every_steps = 1
   c.pygrain_worker_count = 2
