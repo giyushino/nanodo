@@ -26,9 +26,9 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.seed = 42
 
   # Data
-  cfg.batch_size = 256  # Global batch size. Must be divisible by the #devices.
-  cfg.train_epochs = None  # None=>infinite
-  cfg.ds_name = "lm1b:1.1.0"
+  cfg.batch_size = 256  # Global batch size. Must be divisible by the #devices. we have 8 devices 
+  cfg.train_epochs = 16  # None=>infinite 
+  cfg.ds_name = "c4"
   cfg.vocab_path = ""  # set to local-path
 
   # Transformer

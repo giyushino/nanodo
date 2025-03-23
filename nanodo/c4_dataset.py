@@ -6,6 +6,7 @@ def load_c4():
     dataset = load_dataset("allenai/c4", "en")
     dataset = dataset.remove_columns(["url"])
     dataset = dataset.remove_columns(["timestamp"])
+    dataset["test"] = dataset.pop("validation")
     return dataset
 
 def load_c4_10k():

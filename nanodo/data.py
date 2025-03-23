@@ -1,23 +1,12 @@
-# Copyright 2024 DeepMind Technologies Limited.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Data pipeline."""
+#conda_env: nanodo
 
 from collections.abc import Mapping, Sequence
 import dataclasses
 import enum
 import functools
 from typing import Iterator
+
+from nanodo.c4_dataset import * 
 
 import grain.python as grain
 import jax
@@ -26,6 +15,7 @@ import numpy as np
 import tensorflow_datasets as tfds
 
 import sentencepiece as spm
+
 
 PAD_ID = 0
 ### pure python helpers for use with grain ###
@@ -52,7 +42,7 @@ def py_batched_tfds(
     shuffle: bool = True,
 ) -> grain.DataLoader:
   """Returns iterator for regularly batched text examples."""
-  datasource = tfds.data_source(tfds_name, split=split)
+  datasource = load_custom("c4")[split] # probably change this to accept tfds_name lmao
   index_sampler = grain.IndexSampler(
       num_records=num_records if num_records is not None else len(datasource),
       num_epochs=num_epochs,
@@ -184,3 +174,7 @@ def get_in_out(
   weights_BxL = jnp.where(y_BxL != pad_id, 1, 0).astype(jnp.float32)
 
   return x_BxL, y_BxL, weights_BxL
+
+
+
+
