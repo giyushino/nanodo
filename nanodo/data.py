@@ -42,7 +42,8 @@ def py_batched_tfds(
     shuffle: bool = True,
 ) -> grain.DataLoader:
   """Returns iterator for regularly batched text examples."""
-  datasource = load_custom("c4")[split] # probably change this to accept tfds_name lmao
+  #datasource = load_custom("c4")[split] # probably change this to accept tfds_name
+  datasource = load_custom(tfds_name)[split]
   index_sampler = grain.IndexSampler(
       num_records=num_records if num_records is not None else len(datasource),
       num_epochs=num_epochs,

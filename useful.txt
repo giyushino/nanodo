@@ -9,3 +9,4 @@ python nanodo/main.py \
   --config.model.L=128 \
   --config.pygrain_worker_count=0 \
   2> stderr.log
+
