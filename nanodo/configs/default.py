@@ -35,7 +35,7 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.model = ml_collections.config_dict.create(
       D=512,  # model/embed dim  = qkv dim
       H=8,  # num attention heads
-      L=128,  # max context/sequence length (move out of config?)
+      L=128,  # max context/sequence length (move out of config?) used be 512
       N=6,  # number of transformer block layers
       F=2048,  # FF inner dimension
       dtype="bfloat16",  # computation dtype.

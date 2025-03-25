@@ -10,3 +10,11 @@ python nanodo/main.py \
   --config.pygrain_worker_count=0 \
   2> stderr.log
 
+docfg = model.DoConfig(D=512, H=8, L=128, N=6, V=vocab_size, F=2048)
+m = model.TransformerDo(docfg)
+rng = jax.random.PRNGKey(42)
+_, init_rng = jax.random.split(rng)
+input_shape = (8, 128)
+x = jnp.ones(input_shape, dtype=jnp.int32)
+initial_variables_new = jax.jit(m.init)(init_rng, x)
+metrics = metrics_lib.Average()

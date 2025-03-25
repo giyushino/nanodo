@@ -49,19 +49,5 @@ class EvalTest(parameterized.TestCase):
 
 
 if __name__ == "__main__":
-    #absltest.main()
-    docfg = model.DoConfig(D=128, H=16, L=256, N=4, V=1024, F=4 * 4)
-    m = model.TransformerDo(docfg)
-    rng = jax.random.PRNGKey(42)
-    _, init_rng = jax.random.split(rng)
-    input_shape = (2, 256)
-    x = jnp.ones(input_shape, dtype=jnp.int32)
-    initial_variables = jax.jit(m.init)(init_rng, x)
-    with open("real_params.txt", "w") as file:
-        file.write(f"{initial_variables['params']}")
-    metrics = metrics_lib.Average()
-    for _ in range(3):
-      step_metrics = evaluate._eval_step(initial_variables["params"], x, m)
-      metrics = metrics.merge(step_metrics)
-
+    absltest.main()
 
