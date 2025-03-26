@@ -26,7 +26,7 @@ test_config = ml_collections.config_dict.create(
       H=8,  # num attention heads
       L=128,  # max context/sequence length (move out of config?)
       N=6,  # number of transformer block layers
-      dtype="float32",  # computation dtype.
+      dtype="float32",  # cmputation dtype.
       fsdp_enabled=True,  # True to shard the model.
       remat=False,  # Transformer block gradient checkpointing to save memory.
   )
@@ -101,3 +101,14 @@ convert_pos_embed(params)
 logits = float32.apply(initial_variables, x)
 print(logits.shape)
 print(logits)
+
+# input
+for x in batch:
+    print(tokenizer.decode_ids(x.tolist()), "\n")
+
+# output of the model??? 
+probs = jax.nn.softmax(logits, axis=-1)
+token_ids = jnp.argmax(probs, axis=-1) 
+
+for x in token_ids:
+    print(tokenizer.decode_ids(x.tolist()), "\n")

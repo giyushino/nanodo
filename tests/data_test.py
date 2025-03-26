@@ -52,7 +52,7 @@ class DataTest(parameterized.TestCase):
       context_size = 512
       batch_size = 2
       ds = data.py_batched_tfds(
-          tfds_name="lm1b",
+          tfds_name="c4",
           split="train",
           context_size=context_size,
           worker_count=0,
@@ -76,7 +76,7 @@ class DataTest(parameterized.TestCase):
   def test_py_batched_tfds_noam_packed(self):
     with tfds.testing.mock_data():
       ds = data.py_batched_tfds(
-          tfds_name="lm1b",
+          tfds_name="c4",
           split="train",
           context_size=1024,
           batch_size=2,
@@ -96,7 +96,7 @@ class DataTest(parameterized.TestCase):
   def test_py_batched_tfds_padded(self):
     with tfds.testing.mock_data():
       ds = data.py_batched_tfds(
-          tfds_name="lm1b",
+          tfds_name="c4",
           split="train",
           context_size=1024,
           batch_size=2,

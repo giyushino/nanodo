@@ -27,17 +27,17 @@ def get_config() -> ml_collections.ConfigDict:
 
   # Data
   cfg.batch_size = 256  # Global batch size. Must be divisible by the #devices. we have 8 devices 
-  cfg.train_epochs = 16  # None=>infinite 
+  cfg.train_epochs = 12  # None=>infinite 
   cfg.ds_name = "c4"
-  cfg.vocab_path = ""  # set to local-path
+  cfg.vocab_path = "/home/allanz/nanodo/tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model"  # set to local-path
 
   # Transformer
   cfg.model = ml_collections.config_dict.create(
-      D=512,  # model/embed dim  = qkv dim
-      H=8,  # num attention heads
-      L=128,  # max context/sequence length (move out of config?) used be 512
-      N=6,  # number of transformer block layers
-      F=2048,  # FF inner dimension
+      D=768,  # model/embed dim  = qkv dim
+      H=12,  # num attention heads
+      L=1024,  # max context/sequence length (move out of config?) used be 512
+      N=12,  # number of transformer block layers
+      F=3072,  # FF inner dimension
       dtype="bfloat16",  # computation dtype.
       fsdp_enabled=True,  # True to shard the model.
       remat=False,  # Transformer block gradient checkpointing to save memory.
@@ -45,7 +45,8 @@ def get_config() -> ml_collections.ConfigDict:
 
   # Optimizer
   cfg.opt = ml_collections.config_dict.create(
-      num_train_steps=100_000,  # Note: lm1b has 30,301,028 training examples
+      num_train_steps=1_425_270,  # Note: lm1b has 30,301,028 training examples
+                                  # using c4 english, so has 364,868,892 training examples
       peak_learning_rate=0.0016,
       init_learning_rate=0.00016,
       final_learning_rate=0.00016,
@@ -57,7 +58,7 @@ def get_config() -> ml_collections.ConfigDict:
   )
 
   # Checkpointing
-  cfg.workdir = ""
+  cfg.workdir = "/home/allanz/nanodo_workdir2"
   cfg.checkpoint = True
   cfg.checkpoint_every_steps = 2000
   # Path to the checkpoint to be restored. Note than new checkpoints will be
@@ -66,10 +67,10 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.max_to_keep = 100
 
   # Eval
-  cfg.eval_every_steps = 100
+  cfg.eval_every_steps = 1000
   cfg.eval_split = "test"  # 306,688 examples
   cfg.eval_steps = 100  # less if this exceeds 1 epoch
-  cfg.eval_max_target_length = 512
+  cfg.eval_max_target_length = 1024
 
   # Logging
   cfg.write_train_metrics_every_steps = 1  # train loss, gradient norms, etc.
