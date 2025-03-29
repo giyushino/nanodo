@@ -1,114 +1,63 @@
 #conda_env: nanodo
 
-from nanodo.model_factory import *
-from nanodo.data import *
-from nanodo.configs.default import *
-from nanodo.train import *
-import numpy as np
-from flax.linen import Partitioned
-import orbax.checkpoint as ocp
-from orbax.checkpoint import PyTreeCheckpointer
-from flax.core import unfreeze
+from nanodo.configs import default
+from nanodo import model_factory
+from nanodo import data_custom
+from nanodo import model
+from nanodo import data
 import jax.numpy as jnp
-from nanodo.model import *
+import time
+import jax
 
+# get configs used during training
 
-c = get_config()
-#checkpoint = "/home/allanz/nanodo_workdir/92000.orbax-checkpoint-tmp-138"
-checkpoint = "/home/allanz/nanodo_workdir/90000/state"
-params= PyTreeCheckpointer().restore(checkpoint)
-params = params['params']
+if __name__ == "__main__":
+    initial = time.time()
+    c = default.get_config()
+    print(c)
 
+    # load tokenizer
+    tokenizer = data.get_py_tokenizer(c.vocab_path)
+    vocab_size = tokenizer.GetPieceSize()
+    print(f"vocab size: {vocab_size}")
 
-test_config = ml_collections.config_dict.create(
-      D=512,  # model/embed dim  = qkv dim
-      F=2048,  # FF inner dimension
-      H=8,  # num attention heads
-      L=128,  # max context/sequence length (move out of config?)
-      N=6,  # number of transformer block layers
-      dtype="float32",  # cmputation dtype.
-      fsdp_enabled=True,  # True to shard the model.
-      remat=False,  # Transformer block gradient checkpointing to save memory.
-  )
-print(c.model)
+    model, _ = model_factory.get_model_and_loss(c, vocab_size)
 
-tokenizer = get_py_tokenizer("tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model")
-vocab_size = tokenizer.GetPieceSize()
-cfg = DoConfig(**test_config, V=vocab_size)  # pytype:disable=attribute-error
-# model without float32
-float32 = TransformerDo(cfg) 
-print(float32)
-# model with bfloat16
-bfloat16, _ = get_model_and_loss(c, vocab_size)
-print(bfloat16)
-# model with jax.numpy.float32
-jax_float32 = model.DoConfig(D=512, H=8, L=128, N=6, V=vocab_size, F=2048)
-m = model.TransformerDo(jax_float32)
-print(m)
+    # load in dataset
+    print("loading dataset")
 
-rng = jax.random.PRNGKey(42)
-_, init_rng = jax.random.split(rng)
-x = jnp.ones((8, 128), dtype= jnp.int32)
-initial_variables = jax.jit(bfloat16.init)(init_rng, x)
+    t0 = time.time()
+    train_set = data.py_batched_tfds(
+              tfds_name="c4",
+              split="train",
+              context_size=1024,
+              worker_count=16, # number of pygrain workers? 
+              vocab_path="tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model",
+              batch_size = 8
+              )
+    t1 = time.time()
+    print(f"{(t1 - t0):.6f} seconds to load c4")
+    #batch = next(iter(train_set))
+    train_batch = next(iter(train_set))
+    train_batch_2 = next(iter(train_set))
+    # load the model params
+    t2 = time.time()
+    rng = jax.random.PRNGKey(42)
+    _, init_rng = jax.random.split(rng)
+    x = jnp.ones((8, 1024), dtype= jnp.int32)
+    initial_variables = jax.jit(model.init)(init_rng, x)
+    t3 = time.time()
+    print(f"{(t3 - t2):.6f} seconds to create initial variables")
 
-
-test_set = py_batched_tfds(
-          tfds_name="c4_10k",
-          split="train",
-          context_size=128,
-          worker_count=0,
-          vocab_path="tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model",
-          batch_size = 8
-          )
-batch = next(iter(test_set))
-
-def make_partitioned(array, names):
-    partition_array = Partitioned(array, names = names, mesh = None)
-    return partition_array
-
-def convert_attn_blocks(params):
-    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5"]
-    switches = {"attn_out_proj": (None, None, 'data'), "key": ('data', None), "query":('data', None), "value":('data', None)}
-
-    for block in blocks:
-          for switch in switches: 
-               #print(params[block]["CausalAttn_0"][switch]["kernel"])
-               params[block]["CausalAttn_0"][switch]["kernel"] = make_partitioned(params[block]["CausalAttn_0"][switch]["kernel"]["value"], switches[switch])
-
-def convert_Mlp(params):
-    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5"]
-    switches = {"Dense_0": ('data', None), "Dense_1": ('data', None)}
-
-    for block in blocks:
-          for switch in switches: 
-               #print(params[block]["Mlp_0"][switch]["kernel"])
-               params[block]["Mlp_0"][switch]["kernel"] = make_partitioned(params[block]["Mlp_0"][switch]["kernel"]["value"], switches[switch])
-
-
-def convert_embed(params):
-    params["embed"]["embedding"] = make_partitioned(params["embed"]["embedding"]["value"], (None, 'data'))
-
-def convert_pos_embed(params):
-    params["pos_embed"]["embedding"] = make_partitioned(params["pos_embed"]["embedding"]["value"], (None, 'data'))
+    t3 = time.time()
+    test_logits = model.apply(initial_variables, train_batch)
+    test_logits_2 = model.apply(initial_variables, train_batch_2)
+    t4 = time.time()
+    print(test_logits)
+    print(test_logits.shape)
+    print(f"{(t4 - t3):.6f} seconds to run inference")
+    final = time.time()
+    print(final - initial)
 
 
 
-convert_attn_blocks(params)
-convert_Mlp(params)
-convert_embed(params)
-convert_pos_embed(params)
-
-logits = float32.apply(initial_variables, x)
-print(logits.shape)
-print(logits)
-
-# input
-for x in batch:
-    print(tokenizer.decode_ids(x.tolist()), "\n")
-
-# output of the model??? 
-probs = jax.nn.softmax(logits, axis=-1)
-token_ids = jnp.argmax(probs, axis=-1) 
-
-for x in token_ids:
-    print(tokenizer.decode_ids(x.tolist()), "\n")

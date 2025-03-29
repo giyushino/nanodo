@@ -10,6 +10,15 @@ python nanodo/main.py \
   --config.pygrain_worker_count=0 \
   2> stderr.log
 
+
+python nanodo/main.py \
+  --config=nanodo/configs/default.py \
+  --config.workdir=/home/allanz/nanodo_workdir2 \
+  --config.vocab_path=tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model \
+  --config.pygrain_worker_count=0 \
+  2> stderr.log
+
+
 docfg = model.DoConfig(D=512, H=8, L=128, N=6, V=vocab_size, F=2048)
 m = model.TransformerDo(docfg)
 rng = jax.random.PRNGKey(42)
@@ -18,3 +27,74 @@ input_shape = (8, 128)
 x = jnp.ones(input_shape, dtype=jnp.int32)
 initial_variables_new = jax.jit(m.init)(init_rng, x)
 metrics = metrics_lib.Average()
+
+
+import jax
+import jax.numpy as jnp
+
+def my_function(x):
+  return x @ x.T
+
+# JIT compile the function
+compiled_fn = jax.jit(my_function)
+
+# Create some input data
+x = jnp.ones((1000, 1000))
+
+# Run the compiled function once to get the executable
+compiled_fn(x)
+
+# Get the memory usage from the executable
+executable = compiled_fn.lower(x).compile()
+print(f"Total bytes used: {executable.total_allocation_size_in_bytes() / (1024 ** 2):.2f} MB")
+
+
+
+c = get_config()
+print(c)
+tokenizer = get_py_tokenizer("tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model")
+vocab_size = tokenizer.GetPieceSize()
+"""
+cfg = DoConfig(c.model, V=vocab_size)  # pytype:disable=attribute-error
+# model without float32
+float32 = TransformerDo(cfg) 
+print(float32)
+"""
+bfloat16, _ = get_model_and_loss(c, vocab_size)
+print(bfloat16)
+
+rng = jax.random.PRNGKey(42)
+_, init_rng = jax.random.split(rng)
+x = jnp.ones((8, 1024), dtype= jnp.int32)
+initial_variables = jax.jit(bfloat16.init)(init_rng, x)
+
+test_set = data_custom.py_batched_tfds(
+          tfds_name="lm1b",
+          split="train",
+          context_size=1024,
+          worker_count=0,
+          vocab_path="tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model",
+          batch_size = 8
+          )
+
+batch = next(iter(test_set)
+
+train_set = data.py_batched_tfds(
+          tfds_name="c4",
+          split="train",
+          context_size=1024,
+          worker_count=0,
+          vocab_path="tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model",
+          batch_size = 8
+          )
+
+batch_train = next(iter(train_set))
+test = bfloat16.apply(initial_variables, x)
+t0 = time.perf_counter()
+test2 = bfloat16.apply(initial_variables, batch)
+t1 = time.perf_counter()
+print(batch_train.shape)
+test3 = bfloat16.apply(initial_variables, batch_train)
+print(test3)
+print(initial_variables)
+print(t1 - t0 )

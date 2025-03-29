@@ -26,8 +26,8 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.seed = 42
 
   # Data
-  cfg.batch_size = 256  # Global batch size. Must be divisible by the #devices. we have 8 devices 
-  cfg.train_epochs = 12  # None=>infinite 
+  cfg.batch_size = 8  # Global batch size. Must be divisible by the #devices. we have 8 devices 
+  cfg.train_epochs = 20  # None=>infinite 
   cfg.ds_name = "c4"
   cfg.vocab_path = "/home/allanz/nanodo/tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model"  # set to local-path
 
@@ -83,9 +83,9 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.log_internal_metrics = True
 
   # pygrain
-  cfg.pygrain_worker_count = 16  # might increase this if input-bound
+  cfg.pygrain_worker_count = 0  # might increase this if input-bound
   # Buffer size (in unit of batches) for the data loader. Default to 2 so we
   # always prefetch another batch
-  cfg.pygrain_worker_buffer_size = 2
+  cfg.pygrain_worker_buffer_size = 0
 
   return cfg
