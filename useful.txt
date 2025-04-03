@@ -1,3 +1,6 @@
+test
+math.exp(loss / len(tokenize_input)) 
+
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform 
 pip install -U "jax[cuda12]"
 
