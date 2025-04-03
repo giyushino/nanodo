@@ -21,9 +21,15 @@ from absl import app
 from absl import flags
 from absl import logging
 from clu import platform
+import os
 import jax
 from ml_collections import config_flags
 from nanodo import train
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "4, 5, 6, 7"
+import jax
+
+
 
 FLAGS = flags.FLAGS
 

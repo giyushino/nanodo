@@ -69,7 +69,7 @@ python nanodo/main.py \
 Then point your [Tensorboard](https://github.com/tensorflow/tensorboard) to the workdir:
 
 ```
-  tensorboard --logdir /tmp/nanodo_workdir
+  tensorboard --logdir /home/allanz/nanodo_workdir
 ```
 
 If input-bound, try adjusting `config=pygrain_worker_count` to enable pygrain multi-processing.
