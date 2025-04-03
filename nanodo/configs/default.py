@@ -26,7 +26,7 @@ def get_config() -> ml_collections.ConfigDict:
   cfg.seed = 42
 
   # Data
-  cfg.batch_size = 8  # Global batch size. Must be divisible by the #devices. we have 8 devices 
+  cfg.batch_size = 32  # Global batch size. Must be divisible by the #devices. we have 8 devices 
   cfg.train_epochs = 20  # None=>infinite 
   cfg.ds_name = "c4"
   cfg.vocab_path = "/home/allanz/nanodo/tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model"  # set to local-path
@@ -45,7 +45,7 @@ def get_config() -> ml_collections.ConfigDict:
 
   # Optimizer
   cfg.opt = ml_collections.config_dict.create(
-      num_train_steps=1_425_270,  # Note: lm1b has 30,301,028 training examples
+      num_train_steps=227_854_138,  # Note: lm1b has 30,301,028 training examples
                                   # using c4 english, so has 364,868,892 training examples
       peak_learning_rate=0.0016,
       init_learning_rate=0.00016,
@@ -53,17 +53,17 @@ def get_config() -> ml_collections.ConfigDict:
       warmup_steps=1000,
       decay_type="cosine",
       weight_decay=0.1,
-      clip_by_global_norm=None,  # 1.0 is common for many well-known LLMs.
+      clip_by_global_norm=1,  # 1.0 is common for many well-known LLMs.
       optimizer="adamw",
   )
 
   # Checkpointing
-  cfg.workdir = "/home/allanz/nanodo_workdir2"
+  cfg.workdir = "/home/allanz/nanodo_workdir"
   cfg.checkpoint = True
   cfg.checkpoint_every_steps = 2000
   # Path to the checkpoint to be restored. Note than new checkpoints will be
   # saved to the new workdir.
-  cfg.checkpoint_restore_dir = None
+  cfg.checkpoint_restore_dir = None # change this if i resume training again i think
   cfg.max_to_keep = 100
 
   # Eval
