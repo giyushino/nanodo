@@ -16,10 +16,9 @@ python nanodo/main.py \
 
 python nanodo/main.py \
   --config=nanodo/configs/default.py \
-  --config.workdir=/home/allanz/nanodo_workdir2 \
+  --config.workdir=/home/allanz/nanodo_workdir \
   --config.vocab_path=tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model \
-  --config.pygrain_worker_count=0 \
-  2> stderr.log
+  2> /home/allanz/nanodo/stderr.log
 
 
 docfg = model.DoConfig(D=512, H=8, L=128, N=6, V=vocab_size, F=2048)

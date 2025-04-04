@@ -1,63 +1,56 @@
-#conda_env: nanodo
-
+from orbax.checkpoint import PyTreeCheckpointer
 from nanodo.configs import default
 from nanodo import model_factory
 from nanodo import data_custom
+from nanodo import params as par
 from nanodo import model
 from nanodo import data
 import jax.numpy as jnp
-import time
-import jax
+import ml_collections
+from jax import nn
+import os 
+os.environ["CUDA_VISIBLE_DEVICES"] = "4, 5, 6, 7"
 
-# get configs used during training
+c = default.get_config()
+tokenizer = data.get_py_tokenizer(c.vocab_path)
+vocab_size = tokenizer.GetPieceSize()
+model, _ = model_factory.get_model_and_loss(c, vocab_size)
+print(model)
 
-if __name__ == "__main__":
-    initial = time.time()
-    c = default.get_config()
-    print(c)
+checkpoint = "/home/allanz/nanodo_workdir/44000/state"
+params = par.load_params(checkpoint)
 
-    # load tokenizer
-    tokenizer = data.get_py_tokenizer(c.vocab_path)
-    vocab_size = tokenizer.GetPieceSize()
-    print(f"vocab size: {vocab_size}")
+dataset = data.py_batched_tfds(
+          tfds_name="c4",
+          split="train",
+          context_size=1024,
+          worker_count=0,
+          vocab_path=c.vocab_path,
+          batch_size=32,
+      )
 
-    model, _ = model_factory.get_model_and_loss(c, vocab_size)
+data = next(iter(dataset))
+logits = model.apply({'params':params}, data)
 
-    # load in dataset
-    print("loading dataset")
+probabilities = nn.softmax(logits, axis=-1)
+decoded_indices = jnp.argmax(probabilities, axis=-1)
+decoded_texts = [tokenizer.decode_ids(sequence.tolist()) for sequence in decoded_indices]
 
-    t0 = time.time()
-    train_set = data.py_batched_tfds(
-              tfds_name="c4",
-              split="train",
-              context_size=1024,
-              worker_count=16, # number of pygrain workers? 
-              vocab_path="tests/testdata/sentencepiece_cc_all.32000.100extra-sentencepiece.model",
-              batch_size = 8
-              )
-    t1 = time.time()
-    print(f"{(t1 - t0):.6f} seconds to load c4")
-    #batch = next(iter(train_set))
-    train_batch = next(iter(train_set))
-    train_batch_2 = next(iter(train_set))
-    # load the model params
-    t2 = time.time()
-    rng = jax.random.PRNGKey(42)
-    _, init_rng = jax.random.split(rng)
-    x = jnp.ones((8, 1024), dtype= jnp.int32)
-    initial_variables = jax.jit(model.init)(init_rng, x)
-    t3 = time.time()
-    print(f"{(t3 - t2):.6f} seconds to create initial variables")
+# decoded_texts will be a list of 32 decoded strings
+for i, text in enumerate(decoded_texts):
+    print(f"Decoded Text {i + 1}: {text}")
 
-    t3 = time.time()
-    test_logits = model.apply(initial_variables, train_batch)
-    test_logits_2 = model.apply(initial_variables, train_batch_2)
-    t4 = time.time()
-    print(test_logits)
-    print(test_logits.shape)
-    print(f"{(t4 - t3):.6f} seconds to run inference")
-    final = time.time()
-    print(final - initial)
+
+
+
+last_token_indices = decoded_indices[:, -1] 
+decoded_texts = [tokenizer.decode_ids(sequence.tolist()) for sequence in last_token_indices]
+
+# decoded_texts will be a list of 32 decoded strings
+for i, text in enumerate(decoded_texts):
+    print(f"Decoded Text {i + 1}: {text}")
+
+
 
 
 

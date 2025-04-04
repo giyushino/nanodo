@@ -11,8 +11,8 @@ def make_partitioned(array, names):
     return partition_array
 
 def convert_attn_blocks(params):
-    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5"]
-    switches = {"attn_out_proj": (None, None, 'data'), "key": ('data', None), "query":('data', None), "value":('data', None)}
+    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5", "blocks_6", "blocks_7", "blocks_8", "blocks_9", "blocks_10", "blocks_11"]
+    switches = {"attn_out_proj": (None, None, 'data'), "key": ('data', None, None), "query":('data', None, None), "value":('data', None, None)}
 
     for block in blocks:
           for switch in switches: 
@@ -20,7 +20,7 @@ def convert_attn_blocks(params):
                params[block]["CausalAttn_0"][switch]["kernel"] = make_partitioned(params[block]["CausalAttn_0"][switch]["kernel"]["value"], switches[switch])
 
 def convert_Mlp(params):
-    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5"]
+    blocks = ["blocks_0", "blocks_1", "blocks_2", "blocks_3", "blocks_4", "blocks_5", "blocks_6", "blocks_7", "blocks_8", "blocks_9", "blocks_10", "blocks_11"]
     switches = {"Dense_0": ('data', None), "Dense_1": ('data', None)}
 
     for block in blocks:
@@ -48,6 +48,6 @@ def load_params(checkpoint):
     return new_params
 
 if __name__ == "__main__":
-    checkpoint = "/home/allanz/nanodo_workdir/90000/state"
+    checkpoint = "/home/allanz/nanodo_workdir/44000/state"
     test = load_params(checkpoint)
     print(test)
